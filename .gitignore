@@ -1,0 +1,22 @@
+# PY_Code Flutter CLI
+.pycode-cache/
+.last_update_check
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# Temporary files
+*.swp
+*.swo
+*.tmp
+*.temp
+
+# Logs
+*.log
+
+# Backup files
+*.backup
+*.bak

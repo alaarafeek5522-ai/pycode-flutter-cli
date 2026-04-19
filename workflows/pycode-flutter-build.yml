@@ -1,0 +1,92 @@
+name: PY_Code Flutter Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+          - profile
+      output_type:
+        description: 'Output type'
+        required: false
+        default: 'apk'
+        type: choice
+        options:
+          - apk
+          - apk-split
+          - appbundle
+      target_platform:
+        description: 'Target platform'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - android-arm64
+          - android-arm
+          - android-x64
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.3'
+          channel: 'stable'
+      
+      - name: Get dependencies
+        run: flutter pub get
+      
+      - name: Build APK (Debug)
+        if: inputs.build_type == 'debug' && inputs.output_type == 'apk' && inputs.target_platform == 'all'
+        run: flutter build apk --debug
+      
+      - name: Build APK (Release)
+        if: inputs.build_type == 'release' && inputs.output_type == 'apk' && inputs.target_platform == 'all'
+        run: flutter build apk --release
+      
+      - name: Build APK (Profile)
+        if: inputs.build_type == 'profile' && inputs.output_type == 'apk' && inputs.target_platform == 'all'
+        run: flutter build apk --profile
+      
+      - name: Build Split APK (Release)
+        if: inputs.build_type == 'release' && inputs.output_type == 'apk-split'
+        run: flutter build apk --release --split-per-abi
+      
+      - name: Build Split APK (Debug)
+        if: inputs.build_type == 'debug' && inputs.output_type == 'apk-split'
+        run: flutter build apk --debug --split-per-abi
+      
+      - name: Build App Bundle (Release)
+        if: inputs.build_type == 'release' && inputs.output_type == 'appbundle'
+        run: flutter build appbundle --release
+      
+      - name: Build for specific platform
+        if: inputs.target_platform != 'all' && inputs.output_type == 'apk'
+        run: flutter build apk --${{ inputs.build_type }} --target-platform ${{ inputs.target_platform }}
+      
+      - name: Upload APK
+        if: inputs.output_type == 'apk' || inputs.output_type == 'apk-split'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ inputs.build_type }}-apk
+          path: build/app/outputs/flutter-apk/*.apk
+      
+      - name: Upload App Bundle
+        if: inputs.output_type == 'appbundle'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ inputs.build_type }}-appbundle
+          path: build/app/outputs/bundle/release/*.aab

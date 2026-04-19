@@ -1,0 +1,152 @@
+#!/bin/bash
+# PY_Code Flutter CLI - Main Entry Point
+# GitHub: https://github.com/alaarafeek5522-ai/pycode-flutter-cli
+
+set -e
+
+# Determine installation directory
+if [[ -n "$PYCODE_HOME" ]]; then
+    INSTALL_DIR="$PYCODE_HOME"
+elif [[ -d "${HOME}/.pycode" ]]; then
+    INSTALL_DIR="${HOME}/.pycode"
+else
+    INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
+
+LIB_DIR="${INSTALL_DIR}/lib"
+
+# Source core library
+if [[ -f "${LIB_DIR}/core.sh" ]]; then
+    source "${LIB_DIR}/core.sh"
+else
+    echo "Error: Could not find core library"
+    exit 1
+fi
+
+# Auto-update check (run in background)
+check_for_updates() {
+    source "${LIB_DIR}/update.sh"
+    check_update_background 2>/dev/null || true
+}
+
+# Show main help
+show_help() {
+    echo ""
+    echo -e "${BOLD}${CYAN}PY_Code Flutter CLI${NC} ${DIM}v${VERSION}${NC}"
+    echo -e "${DIM}The Ultimate CLI for Mobile Developers on Termux${NC}"
+    echo ""
+    echo -e "${BOLD}USAGE:${NC}"
+    echo "  pycode <command> [options]"
+    echo ""
+    echo -e "${BOLD}COMMANDS:${NC}"
+    echo ""
+    echo -e "${CYAN}📦 Package Management:${NC}"
+    echo "  pycode install <package>     Install packages (flutter, qwen, neovim, etc.)"
+    echo "  pycode update                Update PY_Code CLI to latest version"
+    echo ""
+    echo -e "${CYAN}🦋 Flutter Commands:${NC}"
+    echo "  pycode flutter init          Initialize cloud builds in Flutter project"
+    echo "  pycode flutter doctor        Check system setup for Flutter development"
+    echo "  pycode flutter build <type>  Build APK/AAB in the cloud"
+    echo "  pycode flutter run <target>  Run Flutter app (web server)"
+    echo ""
+    echo -e "${CYAN}ℹ️  Global Options:${NC}"
+    echo "  pycode --help                Show this help"
+    echo "  pycode --version             Show version information"
+    echo ""
+    echo -e "${BOLD}EXAMPLES:${NC}"
+    echo "  pycode install flutter       # Install Flutter SDK"
+    echo "  pycode flutter init          # Setup cloud builds"
+    echo "  pycode flutter build apk --release  # Build release APK"
+    echo "  pycode install qwen          # Install Qwen AI assistant"
+    echo ""
+    echo -e "${BOLD}AVAILABLE PACKAGES:${NC}"
+    echo "  flutter      Flutter SDK"
+    echo "  qwen         Qwen Code CLI (AI assistant)"
+    echo "  oh-my-zsh    Zsh + Oh My Zsh + Plugins"
+    echo "  shell-tools  Fish, FZF, Zsh, TheFuck bundle"
+    echo "  neovim       Modern Vim editor"
+    echo "  micro        Simple terminal editor"
+    echo "  fish         Friendly Interactive SHell"
+    echo "  zsh          Z Shell"
+    echo "  thefuck      Command correction tool"
+    echo ""
+    echo -e "${DIM}Made with ❤️ by PY_Code${NC}"
+    echo -e "${DIM}GitHub: https://github.com/alaarafeek5522-ai/pycode-flutter-cli${NC}"
+    echo ""
+}
+
+# Show version
+show_version() {
+    echo "PY_Code Flutter CLI v${VERSION}"
+}
+
+# Main command router
+main() {
+    # Check for updates in background (don't block)
+    check_for_updates &
+    
+    local command="$1"
+    shift 2>/dev/null || true
+    
+    case "$command" in
+        --help|-h|help)
+            show_help
+            ;;
+        --version|-v|version)
+            show_version
+            ;;
+        install)
+            source "${LIB_DIR}/install.sh"
+            cmd_install_package "$@"
+            ;;
+        update)
+            source "${LIB_DIR}/update.sh"
+            cmd_update
+            ;;
+        flutter)
+            local subcommand="$1"
+            shift 2>/dev/null || true
+            
+            case "$subcommand" in
+                init)
+                    source "${LIB_DIR}/flutter/init.sh"
+                    cmd_init "$@"
+                    ;;
+                doctor)
+                    source "${LIB_DIR}/flutter/doctor.sh"
+                    cmd_doctor "$@"
+                    ;;
+                build)
+                    source "${LIB_DIR}/flutter/build.sh"
+                    cmd_build "$@"
+                    ;;
+                run)
+                    source "${LIB_DIR}/flutter/run.sh"
+                    cmd_run "$@"
+                    ;;
+                *)
+                    print_error "Unknown flutter command: $subcommand"
+                    echo ""
+                    echo "Available flutter commands:"
+                    echo "  pycode flutter init      Initialize cloud builds"
+                    echo "  pycode flutter doctor    Check system setup"
+                    echo "  pycode flutter build     Build APK/AAB in cloud"
+                    echo "  pycode flutter run       Run web server"
+                    exit 1
+                    ;;
+            esac
+            ;;
+        *)
+            if [[ -z "$command" ]]; then
+                show_help
+            else
+                print_error "Unknown command: $command"
+                echo "Run 'pycode --help' for available commands"
+                exit 1
+            fi
+            ;;
+    esac
+}
+
+main "$@"
