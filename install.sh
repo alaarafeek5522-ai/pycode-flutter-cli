@@ -1,21 +1,15 @@
-
----
-
-### الملف رقم 3: `install.sh`
-
-```bash
 #!/bin/bash
 # PY_Code Flutter CLI - Installation Script
 # GitHub: https://github.com/alaarafeek5522-ai/pycode-flutter-cli
 
 set -e
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
+DIM='\033[2m'
 NC='\033[0m'
 
 print_success() { echo -e "${GREEN}✓${NC} $1"; }
@@ -31,7 +25,6 @@ print_header "🚀 PY_Code Flutter CLI Installer"
 echo -e "${DIM}The Ultimate CLI for Mobile Developers on Termux${NC}"
 echo ""
 
-# Check if running in Termux
 if [[ -z "$PREFIX" ]] || [[ "$PREFIX" != *"com.termux"* ]]; then
     print_error "This installer is designed for Termux on Android"
     echo "For other platforms, please install manually"
@@ -39,13 +32,11 @@ if [[ -z "$PREFIX" ]] || [[ "$PREFIX" != *"com.termux"* ]]; then
 fi
 print_success "Termux environment detected"
 
-# Install dependencies
 print_step "Installing dependencies..."
 pkg update -y >/dev/null 2>&1 || true
 pkg install -y git curl gh >/dev/null 2>&1 || true
 print_success "Dependencies installed"
 
-# Clone repository
 print_step "Downloading PY_Code Flutter CLI..."
 rm -rf "$PYCODE_HOME" 2>/dev/null || true
 git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$PYCODE_HOME" 2>/dev/null || {
@@ -55,11 +46,9 @@ git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$PYCODE_HOME" 2>/dev/null ||
 }
 print_success "Downloaded to ${PYCODE_HOME}"
 
-# Make scripts executable
 chmod +x "$PYCODE_HOME/bin/pycode" 2>/dev/null
 find "$PYCODE_HOME/lib" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
 
-# Add to PATH
 print_step "Configuring PATH..."
 SHELL_RC=""
 if [[ -n "$BASH_VERSION" ]]; then
@@ -79,7 +68,6 @@ else
     print_success "PATH already configured"
 fi
 
-# Create symlink for immediate use
 export PATH="${PYCODE_HOME}/bin:$PATH"
 
 echo ""
